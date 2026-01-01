@@ -36,19 +36,38 @@ void Contact::computeContactFrame()
     //  Use it to compute the other two directions.
 
     // TODO Compute first tangent direction t1
-    //
+    
+    Eigen::Vector3f aux(1, 0, 0);
+    if (std::abs(n.x()) > 0.9f) {
+        aux = Eigen::Vector3f(0, 1, 0);
+    }
+    t1 = n.cross(aux).normalized();
+    t2 = n.cross(t1).normalized();
 
-
-    // TODO Compute second tangent direction t2.
-    //
 }
 
 void Contact::computeJacobian()
 {
     // TODO Compute the Jacobians J0 and J1 
     // for body0 and body1, respectively.
-    // 
-    //
+    Eigen::Vector3f r0 = p - body0->x; 
+    Eigen::Vector3f r1 = p - body1->x;
+
+    J0.block<1, 3>(0, 0) = n.transpose();  
+    J0.block<1, 3>(1, 0) = t1.transpose(); 
+    J0.block<1, 3>(2, 0) = t2.transpose(); 
+    // (w x r)*n = (r x n)*w
+    J0.block<1, 3>(0, 3) = r0.cross(n).transpose();  
+    J0.block<1, 3>(1, 3) = r0.cross(t1).transpose(); 
+    J0.block<1, 3>(2, 3) = r0.cross(t2).transpose(); 
+
+    J1.block<1, 3>(0, 0) = -n.transpose();
+    J1.block<1, 3>(1, 0) = -t1.transpose();
+    J1.block<1, 3>(2, 0) = -t2.transpose();
+
+    J1.block<1, 3>(0, 3) = -(r1.cross(n).transpose());
+    J1.block<1, 3>(1, 3) = -(r1.cross(t1).transpose());
+    J1.block<1, 3>(2, 3) = -(r1.cross(t2).transpose());
 
     // Compute the J M^-1 blocks for each body. The code is provided.
     // 

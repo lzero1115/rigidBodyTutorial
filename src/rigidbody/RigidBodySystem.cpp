@@ -100,6 +100,23 @@ void RigidBodySystem::step(float dt)
     //
     for(RigidBody* b : m_bodies)
     {
+        if( b->fixed ){
+            b->xdot.setZero();
+            b->omega.setZero();
+            continue;
+        }
+
+        Eigen::Vector3f totalF = b->f + b->fc;
+        Eigen::Vector3f totalTau = b->tau + b->tauc;
+
+        b->xdot += dt * (1.0f / b->mass) * totalF;
+        b->omega += dt * b->Iinv * (totalTau - b->omega.cross(b->I * b->omega));
+        b->x += dt * b->xdot;
+
+        Eigen::Quaternionf qDot = kinematicMap(b->q, b->omega);
+    
+        b->q.coeffs() += qDot.coeffs() * dt;
+        b->q.normalize();
 
     }
 }
